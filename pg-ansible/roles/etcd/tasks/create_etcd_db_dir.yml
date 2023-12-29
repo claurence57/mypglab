@@ -1,0 +1,7 @@
+---
+- name: Create etcd database directory
+  file:
+    path: "/var/lib/etcd/{{ inventory_hostname }}.etcd"
+    state: directory
+    mode: '0755'
+

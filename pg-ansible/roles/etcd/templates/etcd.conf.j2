@@ -1,0 +1,13 @@
+# etcd.conf
+
+name: {{ ansible_host }}
+data-dir: /var/lib/etcd/{{ inventory_hostname }}.etcd
+initial-advertise-peer-urls: http://{{ hostvars[inventory_hostname]['ansible_facts']['ens18']['ipv4']['address'] }}:2380
+listen-peer-urls: http://{{ hostvars[inventory_hostname]['ansible_facts']['ens18']['ipv4']['address'] }}:2380,http://127.0.0.1:2380
+advertise-client-urls: http://{{ hostvars[inventory_hostname]['ansible_facts']['ens18']['ipv4']['address'] }}:2379
+listen-client-urls: http://{{ hostvars[inventory_hostname]['ansible_facts']['ens18']['ipv4']['address'] }}:2379,http://127.0.0.1:2379
+initial-cluster-state: new
+initial-cluster: {% for host in groups['etcd_nodes'] %}{{ hostvars[host]['ansible_facts']['hostname'] }}=http://{{ hostvars[host]['ansible_facts']['ens18']['ipv4']['address'] }}:2380{% if not loop.last %},{% endif %}{% endfor %}
+
+# Add additional configuration options as needed
+

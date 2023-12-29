@@ -1,0 +1,9 @@
+---
+- name: Playbook for etcd installation
+  hosts: etcd_nodes
+  become: yes
+  become_user: root
+
+  roles:
+    - etcd
+

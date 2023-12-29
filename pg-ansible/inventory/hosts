@@ -1,0 +1,10 @@
+[all:vars]
+ansible_user=ansible
+
+[etcd_nodes]
+centos9221
+centos9222
+centos9223
+
+[template]
+centos9229

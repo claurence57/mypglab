@@ -1,0 +1,26 @@
+---
+- name: To be executed before any installation
+  hosts: all
+  gather_facts: yes
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '9'
+
+    - name: Stop Firewalld
+      systemd:
+        name: firewalld
+        state: stopped
+      become: yes
+
+    - name: Disable Firewalld at boot
+      systemd:
+        name: firewalld
+        enabled: no
+      become: yes
+

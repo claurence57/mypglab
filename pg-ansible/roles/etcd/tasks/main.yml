@@ -1,0 +1,10 @@
+---
+- include_tasks: download_etcd.yml
+- include_tasks: extract_etcd.yml
+- include_tasks: copy_etcd.yml
+- include_tasks: create_config_dir.yml
+- include_tasks: create_etcd_db_dir.yml
+- include_tasks: configure_etcd.yml
+- include_tasks: configure_etcd_systemd_unit.yml
+- include_tasks: start_etcd.yml
+
