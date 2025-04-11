@@ -1,0 +1,38 @@
+scope: pg_cluster
+name: {{ inventory_hostname }}
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: {{ enp0s8_ip.stdout }}:8008
+
+etcd:
+  hosts: [{{ etcd_endpoints.split(',')|join(', ') }}]
+  protocol: http
+
+bootstrap:
+  dcs:
+    ttl: 30
+    retry_timeout: 10
+    postgresql:
+      use_pg_rewind: true
+      parameters:
+        max_connections: 200
+        shared_buffers: 2GB
+        wal_level: replica
+        max_wal_senders: 5
+        archive_mode: on
+        archive_command: "cp %p /postgres/pgbackup/%f"
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: {{ enp0s8_ip.stdout }}:5432
+  data_dir: /postgres/pgdata
+  bin_dir: /usr/pgsql-15/bin
+  authentication:
+    superuser:
+      username: postgres
+      password: {{ superuser_password }}
+    replication:
+      username: replicator
+      password: {{ superuser_password }}
+

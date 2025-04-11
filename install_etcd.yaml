@@ -1,0 +1,113 @@
+---
+- name: Installer ETCD cluster
+  hosts: etcd_cluster
+  gather_facts: yes
+  become: yes
+
+  tasks:
+    - name: Détecter IP interface enp0s8
+      shell: |
+        ip -4 addr show enp0s8 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
+      register: enp0s8_ip
+      changed_when: false
+      tags: network
+
+    - name: real IP address
+      set_fact: 
+        node_ip: "{{ enp0s8_ip.stdout }}"
+      tags: network
+
+    - name: show IP adress
+      debug:
+        msg: "IP is {{ node_ip }}"
+      tags: network
+
+    - name: Compute initial cluster value
+      set_fact:
+        initial_cluster: "{% for host in groups['etcd_cluster'] %}{{ host }}=http://{{ hostvars[host]['node_ip'] }}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+        endpoints: "{% for host in groups['etcd_cluster'] %}http://{{ hostvars[host]['node_ip'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+      tags: network
+
+    - name: show initial cluster
+      debug:
+        msg: "initial cluster is {{ initial_cluster }} endpoints are {{ endpoints }}"
+      tags: network
+
+    - name: Créer utilisateur ETCD dédié
+      ansible.builtin.user:
+        name: "{{ etcd_user }}"
+        group: "{{ etcd_group }}"
+        system: yes
+        create_home: false
+        shell: /sbin/nologin
+      tags: user
+
+    - name: Créer structure de répertoires
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ etcd_user }}"
+        group: "{{ etcd_group }}"
+        mode: 0770
+      loop:
+        - "{{ etcd_install_dir }}"
+        - "{{ etcd_data_dir }}"
+        - "{{ etcd_data_dir }}/{{ inventory_hostname }}"
+        - "{{ etcd_config_dir }}"
+      tags: dirs
+
+    - name: Télécharger ETCD
+      get_url:
+        url: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+        dest: "/tmp/etcd.tar.gz"
+        mode: 0755
+      tags: binaires
+
+    - name: Décompresser ETCD
+      unarchive:
+        src: "/tmp/etcd.tar.gz"
+        dest: "{{ etcd_install_dir }}"
+        remote_src: yes
+        extra_opts: "--strip-components=1"
+      tags: binaires
+
+
+    - name: Déployer configuration ETCD
+      template:
+        src: etcd.conf.j2
+        dest: "{{ etcd_config_file }}"
+        owner: "{{ etcd_user }}"
+        group: "{{ etcd_group }}"
+        mode: 0640
+      notify: reload systemd
+      tags: conf
+
+    - name: Configurer service ETCD
+      template:
+        src: etcd.service.j2
+        dest: "/etc/systemd/system/etcd.service"
+      notify:
+        - reload systemd
+      tags: service
+
+    - name: Démarrer service ETCD
+      systemd:
+        name: etcd
+        enabled: yes
+        state: restarted
+      notify:
+        - start etcd
+      tags: service
+
+    - name: Vérifier statut cluster
+      shell: |
+         ETCDCTL_API=3 {{ etcd_install_dir }}/etcdctl --endpoints={{ endpoints }} endpoint status
+      register: etcd_status
+      retries: 5
+      delay: 10
+      until: etcd_status.rc == 0
+      changed_when: false
+      tags: check
+
+  handlers:
+    - import_tasks: handlers/handlers.yaml

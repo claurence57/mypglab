@@ -1,0 +1,28 @@
+---
+- name: Supprimer ETCD
+  hosts: etcd_cluster
+  become: yes
+  tasks:
+    - name: Arrêter service ETCD
+      systemd:
+        name: etcd
+        state: stopped
+
+    - name: Supprimer fichiers ETCD
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/etc/systemd/system/etcd.service"
+        - "/etc/etcd"
+        - "/opt/etcd"
+        - "/var/lib/etcd"
+      notify: reload systemd
+
+    - name: Supprimer package
+      package:
+        name: etcd
+        state: absent
+
+  handlers:
+    - import_tasks: handlers/handlers.yaml

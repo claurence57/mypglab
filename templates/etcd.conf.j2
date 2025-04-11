@@ -1,0 +1,10 @@
+name: "{{ inventory_hostname }}"
+data-dir: "{{ etcd_data_dir }}/{{ inventory_hostname }}"
+wal-dir: "{{ etcd_data_dir }}/{{ inventory_hostname }}/wal"
+initial-advertise-peer-urls: "http://{{ node_ip }}:2380"
+listen-peer-urls: "http://{{ node_ip }}:2380"
+listen-client-urls: "http://{{ node_ip }}:2379"
+advertise-client-urls: "http://{{ node_ip }}:2379"
+initial-cluster: "{{ initial_cluster }}"
+initial-cluster-state: new
+
