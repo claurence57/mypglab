@@ -3,10 +3,10 @@
   hosts: etcd_cluster
   become: yes
   tasks:
-    - name: Arrêter service ETCD
-      systemd:
-        name: etcd
-        state: stopped
+    - name: Desactiver service ETCD
+      debug:
+        msg: "Stopping etcd service"
+      notify: disable etcd
 
     - name: Supprimer fichiers ETCD
       file:
@@ -19,10 +19,7 @@
         - "/var/lib/etcd"
       notify: reload systemd
 
-    - name: Supprimer package
-      package:
-        name: etcd
-        state: absent
-
   handlers:
-    - import_tasks: handlers/handlers.yaml
+    - include_tasks: handlers/common.yaml
+    - include_tasks: handlers/etcd.yaml
+

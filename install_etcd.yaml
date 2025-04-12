@@ -110,4 +110,5 @@
       tags: check
 
   handlers:
-    - import_tasks: handlers/handlers.yaml
+    - import_tasks: handlers/common.yaml
+    - import_tasks: handlers/etcd.yaml
