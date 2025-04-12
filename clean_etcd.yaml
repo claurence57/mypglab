@@ -2,6 +2,11 @@
 - name: Supprimer ETCD
   hosts: etcd_cluster
   become: yes
+
+  handlers:
+    - import_tasks: handlers/common.yaml
+    - import_tasks: handlers/etcd.yaml
+
   tasks:
     - name: Desactiver service ETCD
       debug:
@@ -18,8 +23,3 @@
         - "/opt/etcd"
         - "/var/lib/etcd"
       notify: reload systemd
-
-  handlers:
-    - include_tasks: handlers/common.yaml
-    - include_tasks: handlers/etcd.yaml
-

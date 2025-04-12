@@ -1,0 +1,22 @@
+---
+- name: enable etcd
+  systemd:
+    name: etcd
+    enabled: yes
+    state: started
+
+- name: start etcd
+  systemd:
+    name: etcd
+    state: started
+
+- name: stop etcd
+  systemd:
+    name: etcd
+    state: stopped
+
+- name: disable etcd
+  systemd:
+    name: etcd
+    enabled: no
+    state: stopped

@@ -4,6 +4,10 @@
   gather_facts: yes
   become: yes
 
+  handlers:
+    - import_tasks: handlers/common.yaml
+    - import_tasks: handlers/etcd.yaml
+
   tasks:
     - name: Détecter IP interface enp0s8
       shell: |
@@ -79,24 +83,20 @@
         owner: "{{ etcd_user }}"
         group: "{{ etcd_group }}"
         mode: 0640
-      notify: reload systemd
       tags: conf
 
     - name: Configurer service ETCD
       template:
         src: etcd.service.j2
         dest: "/etc/systemd/system/etcd.service"
-      notify:
-        - reload systemd
       tags: service
 
-    - name: Démarrer service ETCD
-      systemd:
-        name: etcd
-        enabled: yes
-        state: restarted
+    - name: Active et demarre le service ETCD
+      debug:
+        msg: "Start etcd"
       notify:
-        - start etcd
+        - reload systemd 
+        - enable etcd
       tags: service
 
     - name: Vérifier statut cluster
@@ -109,6 +109,3 @@
       changed_when: false
       tags: check
 
-  handlers:
-    - import_tasks: handlers/common.yaml
-    - import_tasks: handlers/etcd.yaml
