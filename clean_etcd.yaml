@@ -11,6 +11,7 @@
     - name: Desactiver service ETCD
       debug:
         msg: "Stopping etcd service"
+      notify: stop etcd
       notify: disable etcd
 
     - name: Supprimer fichiers ETCD
@@ -23,3 +24,13 @@
         - "/opt/etcd"
         - "/var/lib/etcd"
       notify: reload systemd
+
+    - name: Remove etcd user
+      ansible.builtin.user:
+        name: "{{ etcd_user }}"
+        state: absent
+
+    - name: Remove etcd group
+      ansible.builtin.group:
+        name: "{{ etcd_group }}"
+        state: absent
